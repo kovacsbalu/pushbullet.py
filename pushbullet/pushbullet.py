@@ -1,14 +1,11 @@
 import json
-
 import requests
-
 
 from .device import Device
 from .channel import Channel
 from .contact import Contact
 from .invalid_key_error import InvalidKeyError
 from .filetype import get_file_type
-
 
 
 class PushBullet(object):
@@ -19,7 +16,6 @@ class PushBullet(object):
     ME_URL = "https://api.pushbullet.com/v2/users/me"
     PUSH_URL = "https://api.pushbullet.com/v2/pushes"
     UPLOAD_REQUEST_URL = "https://api.pushbullet.com/v2/upload-request"
-
 
     def __init__(self, api_key):
         self.api_key = api_key
@@ -111,7 +107,13 @@ class PushBullet(object):
             return False, None
 
     def edit_device(self, device, nickname=None, model=None, manufacturer=None):
-        data = {"nickname": nickname}
+        data = {}
+        if nickname:
+            data["nickname"] = nickname
+        if model:
+            data["model"] = model
+        if manufacturer:
+            data["manufacturer"] = manufacturer
         iden = device.device_iden
         r = self._session.post("{}/{}".format(self.DEVICES_URL, iden), data=json.dumps(data))
         if r.status_code == requests.codes.ok:
@@ -124,8 +126,7 @@ class PushBullet(object):
     def edit_contact(self, contact, name):
         data = {"name": name}
         iden = contact.iden
-        r = self._session.post("{}/{}".format(self.CONTACTS_URL, iden),
-                                data=json.dumps(data))
+        r = self._session.post("{}/{}".format(self.CONTACTS_URL, iden), data=json.dumps(data))
         if r.status_code == requests.codes.ok:
             new_contact = Contact(self, r.json())
             self.contacts[self.contacts.index(contact)] = new_contact
@@ -152,7 +153,7 @@ class PushBullet(object):
             return False, r.json()
 
     def get_pushes(self, modified_after=None, limit=None):
-        data = {"modified_after": modified_after, "limit":limit}
+        data = {"modified_after": modified_after, "limit": limit}
 
         pushes_list = []
         get_more_pushes = True
@@ -202,7 +203,7 @@ class PushBullet(object):
         file_url = r.json().get("file_url")
         upload_url = r.json().get("upload_url")
 
-        upload = requests.post(upload_url, data=upload_data, files={"file": f})
+        requests.post(upload_url, data=upload_data, files={"file": f})
 
         return True, {"file_type": file_type, "file_url": file_url, "file_name": file_name}
 
